@@ -1,0 +1,104 @@
+#Valid for CentOS 7 releases
+---
+- hosts: 127.0.0.1 
+  vars:
+    ncs_package_name: nso-4.4.linux.x86_64
+    ncs_package_location: /root/
+    ncs_run_location: /root/access_project
+
+  tasks:
+    - name: " **********************[[ Stop the Firewall]]********************** "
+      service: name=firewalld state=stopped enabled=no
+      
+    - name: " **********************[[ Stop the SELINUX]]********************** "
+      selinux:
+        policy: targeted
+        state: disabled
+        
+    - name: " **********************[[ Install Epel Package ]]********************** "
+      yum: name=epel-release state=installed update_cache=True
+        
+    - name: " **********************[[ Install VM Tools on virtual hosts ]]********************** "
+      yum: name=open-vm-tools state=installed
+      when: ansible_system_vendor == "VMware, Inc."
+      
+      #The commented packages below are not mandatory for NSO installation but will make your life much easier!
+    - name: " **********************[[ Install Essential Packages ]]********************** "
+      yum: name={{ item.name }} state={{ item.state }}
+      with_items:
+        - { name: gcc, state: installed }
+        #- { name: htop, state: installed }
+        #- { name: tcpdump, state: installed }
+        #- { name: net-tools, state: installed }
+        #- { name: vim, state: installed }
+        #- { name: vim-enhanced, state: installed }
+        #- { name: wget, state: installed }
+        #- { name: isomd5sum, state: installed }
+        #- { name: createrepo, state: installed }
+        #- { name: mkisofs, state: installed }
+        #- { name: screen, state: installed }
+        #- { name: mlocate, state: installed }
+        #- { name: telnet, state: installed }
+        #- { name: iotop, state: installed }
+        #- { name: p7zip, state: installed }
+        #- { name: tree, state: installed }
+        #- { name: traceroute, state: installed }
+        #- { name: bmon, state: installed }
+        #- { name: iftop, state: installed }
+        #- { name: sysstat, state: installed }
+        #- { name: ansible, state: installed }
+        #- { name: fuse-sshfs, state: installed }
+        - { name: java-1.7.0-openjdk, state: installed }
+        - { name: java-1.7.0-openjdk-devel, state: installed }
+        - { name: ant, state: installed }
+
+    - name: " **********************[[ Find Java Home ]]********************** "
+      shell: 'readlink -f $(which java) | cut -d / -f1,2,3,4,5'
+      register: java_home
+        
+    - name: " **********************[[ Customize Bash Profile ]]********************** "
+      lineinfile: dest=/root/.bashrc line={{ item.name }} #insertbefore='^export PATH'
+      with_items:
+        - {name: source /root/ncs-4/ncsrc }
+        - {name: 'JAVA_HOME="{{ java_home.stdout }}"' }
+        - {name: export JAVA_HOME}
+        - {name: 'PATH=$PATH:$JAVA_HOME' }
+        - {name: export PATH}
+        - {name: alias tree='tree --charset=ASCII -AC'}
+        - {name: alias grep='grep --color=auto' }
+        - {name: alias egrep='egrep --color=auto' }
+        - {name: alias wget='wget -c'}
+        - {name: alias vi='vim' }
+        - {name: alias ls='ls -F'}
+        - {name: LANG=en_US }
+        - {name: 'SUPPORTED=en_US:en' }
+        - {name: export LANG SUPPORTED}
+
+    - name: " *****************************[[ Chmod NSO ]]**************************** "
+      file:
+        path: '{{ ncs_package_location }}/{{ ncs_package_name }}.signed.bin'
+        owner: root
+        group: root
+        mode: 777
+
+    - name: " *****************************[[ Extract NSO Package ]]**************************** "
+      script: '{{ ncs_package_location }}/{{ ncs_package_name }}.signed.bin --skip-verification'
+
+    - name: " *****************************[[ NSO Local Install ]]**************************** "
+      shell: 'sh {{ ncs_package_location }}/{{ ncs_package_name }}.installer.bin $HOME/ncs-4 --local-install'
+
+    - name: " *****************************[[ Instantiate the NSO ]]****************************"
+      shell: '$HOME/ncs-4/bin/ncs-setup --dest {{ ncs_run_location }}'
+
+    - name: " *****************************[[ Start NSO ]]****************************"
+      shell: '{{ ncs_package_location }}/ncs-4/bin/ncs'
+      args:
+        chdir: "{{ ncs_run_location }}"
+        
+#ansible-playbook installing_nso.yml -vvv
+
+##Or run it remotely
+
+#ansible-playbook installing_nso.yml -vvv -i <ip_address>, -k
+
+
