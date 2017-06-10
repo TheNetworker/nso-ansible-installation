@@ -4,6 +4,7 @@ Recently I installed NSO in few customers environments and I thought it would be
  
 So I wrote Ansible module that take three inputs from user and take care of the rest
 
+## File Input
 | variable name        | usage                                                                                           |
 |----------------------|-------------------------------------------------------------------------------------------------|
 | ncs_package_name     | This is the name of NSO downloaded package (example: nso-4.4.linux.x86_64)                      |
@@ -15,6 +16,7 @@ Once you run the module (locally or via remote host), it will prepare the linux 
 
 to run it, simply execute the below command on host that has ansible package installed
 
+## Commands
 ```
 #ansible-playbook nso_demo.yml
 ```
