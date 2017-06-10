@@ -100,3 +100,5 @@
 ##Or run it remotely
 
 #ansible-playbook installing_nso.yml -vvv -i <ip_address>, -k
+
+##
