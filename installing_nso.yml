@@ -102,3 +102,5 @@
 #ansible-playbook installing_nso.yml -vvv -i <ip_address>, -k
 
 
+ss
+ss
