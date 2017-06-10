@@ -4,7 +4,7 @@ Recently I installed NSO in few customers environments and I thought it would be
  
 So I wrote Ansible module that take three inputs from user and take care of the rest
 
-## File Input
+## File Inputs
 | variable name        | usage                                                                                           |
 |----------------------|-------------------------------------------------------------------------------------------------|
 | ncs_package_name     | This is the name of NSO downloaded package (example: nso-4.4.linux.x86_64)                      |
